@@ -471,7 +471,7 @@
       <!-- Step 2 — Framing -->
       <section class="panel step hidden" data-step="1">
         <h2>Step 2 — Framing &amp; camera distance</h2>
-        <p class="hint">Should the edit stay close on the dish, show a bit more scene, or lean into an angled look? Pick what you want the final ad to feel like.</p>
+        <p class="hint">Defaults favor <strong>ad-ready working distance</strong> — full dish visible, breathing room, not a macro crop. Tight phone shots get “opened up” unless you explicitly choose a tighter hero. The prompt also <strong>mandates a studio-grade finish</strong> (art-directed surface &amp; light).</p>
         <div class="grid" id="framingGrid"></div>
       </section>
 
@@ -529,6 +529,7 @@
       <!-- Step 5 -->
       <section class="panel step hidden" data-step="4">
         <h2>Step 5 — Cutlery &amp; plating</h2>
+        <p class="hint">“Keep vessel + utensils” locks only the <strong>plate/bowl and the same fork/spoon/knife</strong> — table, background, and light can still become studio-grade.</p>
         <div class="grid" id="cutleryGrid"></div>
       </section>
 
@@ -631,7 +632,7 @@
   ];
 
   const CUTLERY = [
-    { id: "keep", name: "Keep as in photo", desc: "Do not change cutlery or plating." },
+    { id: "keep", name: "Keep vessel + same utensils", desc: "Same plate/bowl and same fork, spoon, knife as shown — scene & surface may change." },
     { id: "remove", name: "Remove cutlery", desc: "Dish only — no utensils." },
     { id: "western", name: "Minimal western", desc: "Simple fork and knife." },
     { id: "indian", name: "Indian style", desc: "Steel thali / katori / banana leaf as appropriate." },
@@ -656,10 +657,26 @@
   ];
 
   const FRAMING = [
-    { id: "keep", name: "Keep as in photo", desc: "Same crop, distance, and angle as the upload — only polish per other steps." },
-    { id: "closeup", name: "Close-up / tight hero", desc: "Dish fills the frame; minimal background; menu-thumbnail energy." },
-    { id: "medium", name: "Slightly pulled back", desc: "More table or context; room for headlines and UI in ads." },
-    { id: "angled", name: "Angled / dynamic view", desc: "Three-quarter or diagonal feel; editorial depth — not a flat sterile snap." }
+    {
+      id: "commercial",
+      name: "Balanced — commercial / studio distance (recommended)",
+      desc: "Full plate & food visible with comfortable margin; not macro-tight; campaign default."
+    },
+    {
+      id: "wider",
+      name: "Wider — more table & negative space",
+      desc: "Further back for headlines, logos, and UI; generous breathing room."
+    },
+    {
+      id: "tight",
+      name: "Tighter hero (menu style)",
+      desc: "Dish-forward but keep full vessel plausible; do not crop plate rims on multiple sides."
+    },
+    {
+      id: "match_angle",
+      name: "Match base angle — fix distance only",
+      desc: "Keep top-down vs ¾ vs eye-level, but if source is too close, back up to commercial distance."
+    }
   ];
 
   function gcd(a, b) {
@@ -675,17 +692,24 @@
   }
 
   function framingInstruction(id) {
+    const antiMacro =
+      " If the BASE image is an extreme close-up (plate edges cropped, food fills the entire frame, smartphone macro look), you MUST reframe to a healthier working distance — show the full vessel with clear margin on all sides unless USER TAILORING explicitly demands a macro crop.";
     const map = {
-      keep:
-        "FRAMING LOCK: Preserve the same effective crop, camera distance, and viewing angle as the base image. Do not arbitrarily zoom in, zoom out, or reframe unless the OUTPUT DIMENSIONS force a minimal edge crop — in that case, crop evenly or prioritize keeping the dish composition faithful. The hero food should occupy a similar proportion of the frame as in the source.",
-      closeup:
-        "FRAMING TARGET — CLOSE-UP HERO: Recompose or adjust toward a tight food hero shot. The dish(es) should dominate the frame (aim for roughly 70–90% of the visible food+plate area). Reduce dead space and background clutter. Maintain believable perspective; do not use extreme macro that distorts scale. Leave only subtle background for depth unless ENHANCEMENTS request text-safe negative space.",
-      medium:
-        "FRAMING TARGET — MEDIUM / CONTEXT: Move toward a slightly pulled-back composition versus a macro close-up. Show more of the table surface, place setting, or environment edge so the image works for ads that need headline space or brand marks. Target roughly 50–70% of the frame on the hero dish; balance appetite appeal with readable layout margins.",
-      angled:
-        "FRAMING TARGET — ANGLED / EDITORIAL: Favor a dynamic camera feel — three-quarter angle, gentle diagonal lines, or subtle off-axis perspective. Avoid a boring flat snapshot unless the base is already a flat lay (then keep that language). No fisheye or unnatural warping; perspective must stay physically plausible."
+      commercial:
+        "FRAMING — BALANCED COMMERCIAL / STUDIO DISTANCE: Target professional ad photography working distance. The entire hero plate/bowl and its immediate garnish layout must be comfortably inside the frame with visible breathing room (negative space) around it — roughly ~55–70% of frame on the dish+plate, remainder calm surface/background. " +
+        "Forbidden: toy-camera macro where rims are cut off on multiple edges or the dish feels claustrophobic. " +
+        antiMacro,
+      wider:
+        "FRAMING — WIDER / MORE CONTEXT: Pull further back than balanced commercial — ~45–60% of frame on dish+plate, with generous table, surface, or styled negative space for headlines and UI. Still show the full vessel; never awkward partial crops. " +
+        antiMacro,
+      tight:
+        "FRAMING — TIGHTER MENU HERO: Dish-forward for thumbnail impact — roughly ~65–80% of frame on dish+plate — but STILL keep the full rim of the vessel visible (or nearly so on one forgiving edge). No extreme macro; no multi-edge rim clipping; utensil tips should not be awkwardly severed. " +
+        antiMacro,
+      match_angle:
+        "FRAMING — MATCH CAMERA ANGLE, FIX DISTANCE: Preserve the base photo’s camera language (top-down stays top-down; ¾ stays ¾). However, if the source framing is too tight, BACK THE VIRTUAL CAMERA OUT until the composition matches balanced commercial distance — full vessel, comfortable margins, ad-ready. Do not change angle family into a different one. " +
+        antiMacro
     };
-    return map[id] || map.keep;
+    return map[id] || map.commercial;
   }
 
   const LS_GEMINI_KEY = "food_prompt_gemini_key";
@@ -782,8 +806,8 @@
   const READINESS_PROMPT =
     "You advise on food/restaurant photo editing workflows. The user generated a long MASTER PROMPT for an AI image editor (Gemini-class). " +
     "They may attach the BASE food photo for visual context.\n\n" +
-    "Evaluate how READY they are to run this edit successfully. Consider: background clutter vs anti-clutter instructions, " +
-    "possible contradictions (e.g. keep restaurant vs simplify), festive density, framing vs output aspect ratio, food-integrity rules, output clarity/sharpness vs soft or low-res sources, and missing details.\n\n" +
+    "Evaluate how READY they are to run this edit successfully. Consider: framing/working distance (macro-tight vs commercial margin), commercial studio finish vs snapshot look, background clutter vs anti-clutter instructions, " +
+    "possible contradictions (e.g. keep restaurant vs simplify), festive density, output aspect ratio, food-integrity rules, output clarity/sharpness vs soft or low-res sources, and missing details.\n\n" +
     "Respond in EXACTLY this Markdown structure (use the headings):\n\n" +
     "## Overall readiness (1–10)\n" +
     "One line: score and a short reason.\n\n" +
@@ -913,9 +937,9 @@
         );
       case "restaurant":
         return (
-          "Keep the SAME venue identity (architecture, materials, palette, room character) but do NOT preserve a chaotic frame. " +
+          "Keep the SAME venue identity (architecture, materials, palette, room character) but elevate toward EDITORIAL in-venue quality — believable pro food shoot on location, not a flat phone snap on anonymous laminate. " +
           "De-clutter: reduce competing objects in the background (merge distant busyness into softer bokeh, tone down excessive tableware, simplify far edges). " +
-          "Improve lighting balance, color grading, and minor cleanup. Enhance and simplify — do not replace the restaurant with an unrelated set unless the user asked in USER TAILORING." +
+          "Improve lighting balance, color grading, controlled highlights, and tasteful depth; table surface may read richer but still plausible for the setting. Do not replace the restaurant with an unrelated set unless the user asked in USER TAILORING." +
           guard +
           clutterNote
         );
@@ -967,7 +991,9 @@
 
   function cutleryInstruction(id) {
     const map = {
-      keep: "Keep all cutlery, plates, and plating exactly as in the base image unless lighting touches them indirectly.",
+      keep:
+        "CUTLERY LOCK — VESSEL + UTENSILS ONLY: Keep the SAME serving vessel (plate, bowl, platter, etc.) and the SAME visible utensils (fork, spoon, knife as shown — same metal/ceramic, relative arrangement on the plate). " +
+        "You MAY change everything else: table surface, background, scene props, lighting, and grading — only the dishware identity and utensil identity stay tied to the base. Do not swap in different plateware or different fork/spoon models. Food placement on the plate follows FOOD INTEGRITY rules.",
       remove: "Remove all utensils from the frame. Show only the dish and surface; no forks, knives, or spoons.",
       western: "Present with minimal Western service: simple fork and knife placed naturally if not already present; otherwise adjust to this style without clutter.",
       indian: "Use Indian-style service where appropriate: steel thali, katori, or banana leaf presentation; match cuisine context.",
@@ -982,7 +1008,8 @@
       warm: "Warm & cozy: golden-hour tone, soft shadows, subtle warm color grade for appetite appeal.",
       clinical: "Bright clinical / high-key: even soft lighting, minimal harsh shadow, very clean — ideal for delivery menu thumbnails.",
       moody: "Moody & dramatic: directional light (e.g. from top-left), deeper shadows, controlled highlights, editorial contrast.",
-      original: "Retain the original lighting direction and character; only balance exposure and white balance if needed for consistency."
+      original:
+        "Honor the source lighting mood and direction, but REFINE to studio-grade execution: reduce harsh flat overhead / snapshot glare, balance highlights and fill, add gentle sculpting — final image must not read as a cheap phone grab even when the mood stays similar."
     };
     return map[id] || map.original;
   }
@@ -1029,7 +1056,7 @@
   let vibe = "clean";
   let cutlery = "keep";
   let light = "warm";
-  let framing = "keep";
+  let framing = "commercial";
 
   function renderProgress() {
     const labels = ["Image", "Frame", "Size", "Style", "Plating", "FX", "Light", "Extra", "Done"];
@@ -1174,6 +1201,15 @@ The final image must look CLEAR and appetizing at the target OUTPUT pixel size �
 5. Depth of field: respect real bokeh from the source; do not fake razor-sharp everything. If the entire frame is uniformly soft, improve overall acuity modestly — do not invent fake micro-detail that never existed.
 6. Delivery check: at ${dim.w}×${dim.h} px, the hero dish should read as crisp and intentional — not a smeary rescale — unless the user explicitly asked for a soft dreamlike look in ADDITIONAL.`;
 
+    const commercialStudioFinish = `=== COMMERCIAL & STUDIO FINISH (MANDATORY — QUALITY BAR) ===
+Unless USER TAILORING or ADDITIONAL explicitly demands a raw, documentary look, the output MUST read as intentional commercial / studio-grade food photography — never a harsh amateur snapshot.
+
+1. Working distance: hero vessel fully visible with comfortable margin (see FRAMING). No claustrophobic macro; no plate rims cropped off multiple sides.
+2. Background & surface: art-directed — seamless sweep, tasteful wood/stone/linen/textile, soft gradient, or believably graded environment with depth. Avoid the accidental “flat grey restaurant table + overhead glare” snapshot aesthetic unless the user explicitly wants authentic casual-dining realism over polish.
+3. Lighting: intentional key + fill — soft directional or window-quality light, appetizing speculars, gentle shadows; tone down flat overhead phone-flash energy.
+4. One coherent world: surface, props, and dish share the same lighting logic and finish quality.
+5. Always suitable for brand, delivery, or paid social — campaign-minded polish is the default.`;
+
     const standing = `=== STANDING QUALITY BAR (ALWAYS APPLY) ===
 
 1. Photoreal food only: no illustration, CGI plastic, wax shine, or “AI sheen.”
@@ -1185,7 +1221,8 @@ The final image must look CLEAR and appetizing at the target OUTPUT pixel size �
 7. No text, watermarks, or logos unless explicitly requested in ADDITIONAL or USER TAILORING.
 8. Ad-readable backgrounds: avoid cluttered, wall-to-wall busyness; background must not compete with the dish (see COMPOSITION section above).
 9. If the uploaded photo is already overcrowded, simplify the scene — do not “preserve clutter” as if it were sacred.
-10. Clarity at output size: deliver a clear, legible result at the stated dimensions; if the source is low-res, upscale and refine intelligently — sharp where it should be sharp, never a blurry or watercolor mush (see OUTPUT CLARITY section).`;
+10. Clarity at output size: deliver a clear, legible result at the stated dimensions; if the source is low-res, upscale and refine intelligently — sharp where it should be sharp, never a blurry or watercolor mush (see OUTPUT CLARITY section).
+11. Commercial studio finish: art-directed surface and light — not a thoughtless phone snapshot (see COMMERCIAL & STUDIO FINISH section).`;
 
     const negatives = `=== NEGATIVE CONSTRAINTS (DO NOT) ===
 
@@ -1197,12 +1234,15 @@ The final image must look CLEAR and appetizing at the target OUTPUT pixel size �
 - Do NOT reproduce an extremely busy tablescape at full density when the goal is a clean, festive-hero, or ad-ready look — simplify.
 - Do NOT add more decorative objects than the preset, COMPOSITION rules, and USER TAILORING justify; default to “less is more.”
 - Do NOT deliver a uniformly soft, mushy, or watercolor-blurred final image when plausible clarity and texture recovery would better serve the ad — especially for low-res sources.
-- Do NOT apply heavy global sharpening that creates halos, crunchy edges, or obvious “AI sharpen” artifacts.`;
+- Do NOT apply heavy global sharpening that creates halos, crunchy edges, or obvious “AI sharpen” artifacts.
+- Do NOT deliver an extreme macro crop or multi-edge cropped plate rim when FRAMING calls for commercial or balanced distance — open up the shot.
+- Do NOT leave a flat, accidental snapshot background and lighting when the brief implies polished commercial food work — unless the user explicitly asked for unstyled realism.`;
 
     const checklist = `=== MODEL CHECKLIST (VERIFY BEFORE FINALIZING) ===
 
 ☐ Food pixels: same meal, same plating logic as base — not a newly generated dish.
-☐ Framing: matches "${frameName}" intent together with safe margins for the chosen platform.
+☐ Framing: matches "${frameName}" intent; full vessel readable; comfortable margins — not macro-claustrophobic.
+☐ Studio finish: background/surface and lighting read art-directed / campaign-grade (unless user asked for raw realism).
 ☐ Clarity: at ${dim.w}×${dim.h} px the hero reads sharp and clear enough for mobile/thumbnail; no mushy upscale; no halo sharpening.
 ☐ Clutter: background is calmer and more readable than a chaotic snapshot; hero dish clearly dominates.
 ☐ Background: preset + COMPOSITION rules + USER TAILORING merged without contradictions.
@@ -1220,7 +1260,7 @@ The final image must look CLEAR and appetizing at the target OUTPUT pixel size �
 4. Request output at ${dim.w}×${dim.h} px (or closest supported size), aspect ${aspectLabel(dim.w, dim.h)}.
 
 --- ROLE ---
-You are a senior food photographer and retoucher. Your task is to EDIT the supplied base photograph into a campaign-ready frame while preserving the real food as captured. You prioritize realism, appetite appeal, brand-safe composition, and a CLEAR final image at the target resolution (including when the source is slightly low-res). You actively avoid cluttered, ad-unfriendly backgrounds: simplify busy scenes unless the user explicitly wants maximal set-dressing.
+You are a senior food photographer and retoucher. Your task is to EDIT the supplied base photograph into a campaign-ready frame while preserving the real food as captured. You prioritize realism, appetite appeal, brand-safe composition, COMMERCIAL working distance (not macro phone-tight), a CLEAR final image at the target resolution (including when the source is slightly low-res), and a STUDIO-GRADE art-directed surface and lighting finish — never an accidental snapshot. You actively avoid cluttered, ad-unfriendly backgrounds: simplify busy scenes unless the user explicitly wants maximal set-dressing.
 
 --- OUTPUT SPECS ---
 PIXEL SIZE: ${dim.w} × ${dim.h} px
@@ -1237,6 +1277,8 @@ ${baseDesc}${assetsNote}
 ${framingInstruction(framing)}
 
 Implementation notes: If OUTPUT DIMENSIONS differ from the base aspect ratio, letterbox or crop intelligently — prioritize the hero dish; never squish or stretch unnaturally. When in doubt, preserve appetite appeal and horizon/plate geometry.
+
+${commercialStudioFinish}
 
 ${compositionClutter}
 
@@ -1271,7 +1313,7 @@ ${standing}
 ${checklist}
 
 --- LEGACY SHORT HEADER (optional paste-in helpers) ---
-OUTPUT: ${dim.w}×${dim.h} px · ${dim.label} · Frame: ${frameName} · Style: ${vibeName}`;
+OUTPUT: ${dim.w}×${dim.h} px · ${dim.label} · Frame: ${frameName} · Style: ${vibeName} · Commercial studio finish + balanced distance (mandatory unless user requested raw realism)`;
 
     document.getElementById("out").textContent = text;
   }
